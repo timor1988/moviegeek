@@ -1,7 +1,6 @@
 import os
 import logging
 
-
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "prs_project.settings")
 import django
 django.setup()
@@ -46,7 +45,7 @@ class BayesianPersonalizationRanking(object):
         train_data:df，user_id,movie_id,rating
         k:隐向量维度
         """
-        self.ratings = train_data[['user_id', 'movie_id', 'rating']].as_matrix()
+        self.ratings = train_data[['user_id', 'movie_id', 'rating']].to_numpy() # df转换为array
         self.k = k
         self.user_ids = pd.unique(train_data['user_id'])
         self.movie_ids = pd.unique(train_data['movie_id'])
@@ -231,6 +230,7 @@ def load_all_ratings(min_ratings=1):
 
 def ensure_dir(file_path):
     directory = os.path.dirname(file_path)
+    print(directory)
     if not os.path.exists(directory):
         os.makedirs(directory)
 
@@ -241,8 +241,10 @@ if __name__ == '__main__':
     logger = logging.getLogger('BPR calculator')
 
     train_data = load_all_ratings(1)
-    bpr = BayesianPersonalizationRanking(save_path='./models/bpr/{}/'.format(datetime.now()))
+    bpr = BayesianPersonalizationRanking(save_path='./models/bpr/{}/'.format(datetime.now().strftime("%m-%d-%H")))
     bpr.train(train_data, 10, 20)
+
+
 
 
 
