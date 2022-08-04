@@ -4,7 +4,7 @@ import django
 import json
 import requests
 import time
-
+import pandas as pd
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'prs_project.settings')
 
 django.setup()
@@ -24,21 +24,41 @@ def get_descriptions():
     for page in range(1, NUMBER_OF_PAGES):
         formated_url = url.format(start_date, api_key, page)
         print(formated_url)
-        r = requests.get(formated_url)
+        r = requests.get(formated_url,verify=False)
         for film in r.json()['results']:
             id = film['id']
             md = MovieDescriptions.objects.get_or_create(movie_id=id)[0]
-
             md.imdb_id = get_imdb_id(id)
             md.title = film['title']
             md.description = film['overview']
             md.genres = film['genre_ids']
-            if None != md.imdb_id:
+            if md.imdb_id:
                 md.save()
 
         time.sleep(1)
 
         print("{}: {}".format(page, r.json()))
+
+
+def get_descriptions_from_csv():
+    """
+    从csv读取movie overview文件
+    """
+    MovieDescriptions.objects.all().delete()
+    df = pd.read_csv(r"D:\study\data\tmdb-movies.csv")
+    df = df[["id","imdb_id","original_title","overview","genres"]]
+    for item in df.iterrows():
+        r = item[1]["imdb_id"]
+        print(r)
+        if r and isinstance(r,str): # 保留有imdb_id的记录
+            id = item[1]["id"]
+            md = MovieDescriptions.objects.get_or_create(movie_id=id)[0]
+            md.imdb_id = r[2:]
+            md.title = item[1]["original_title"]
+            md.description = item[1]["overview"]
+            md.genres = item[1]["genres"]
+            md.save()
+
 
 
 def save_as_csv():
@@ -109,6 +129,7 @@ def get_popular_films_for_genre(genre_str):
 
 if __name__ == '__main__':
     print("Starting MovieGeeks Population script...")
-    get_descriptions()
+    #get_descriptions()
+    get_descriptions_from_csv()
     # get_popular_films_for_genre('comedy')
     # save_as_csv()

@@ -1,7 +1,6 @@
 import os
 import sqlite3
 import tqdm
-import psycopg2
 from scipy.sparse import coo_matrix
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "prs_project.settings")
@@ -222,17 +221,9 @@ class LdaModel(object):
 
     @staticmethod
     def get_conn():
-        if settings.DATABASES['default']['ENGINE'] == 'django.db.backends.postgresql':
-            dbUsername = settings.DATABASES['default']['USER']
-            dbPassword = settings.DATABASES['default']['PASSWORD']
-            dbName = settings.DATABASES['default']['NAME']
-            conn_str = "dbname={} user={} password={}".format(dbName,
-                                                              dbUsername,
-                                                              dbPassword)
-            conn = psycopg2.connect(conn_str)
-        elif settings.DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
-            dbName = settings.DATABASES['default']['NAME']
-            conn = sqlite3.connect(dbName)
+        """直接使用sqllite"""
+        dbName = settings.DATABASES['default']['NAME']
+        conn = sqlite3.connect(dbName)
 
         return conn
 if __name__ == '__main__':
@@ -240,6 +231,5 @@ if __name__ == '__main__':
 
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     data, docs = load_data()
-
     lda = LdaModel()
     lda.train(data, docs)
